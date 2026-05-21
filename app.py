@@ -78,6 +78,10 @@ def load_data():
         abv_min_val = float(df['beer_abv'].min())
         abv_max_val = float(df['beer_abv'].max())
 
+        st.divider()
+        st.markdown('**Alcohol ABV Range**')
+        st.caption('Slide a range below to select how alcoholic you like your beer')
+
         abv_range = st.slider(
             "Alcohol by Volume (%)",
             min_value=abv_min_val,
