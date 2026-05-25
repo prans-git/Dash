@@ -120,7 +120,7 @@ if filtered.empty:
     st.warning("⚠️ No reviews match your current filters. Try loosening the sliders.")
     st.stop() 
 
-st.markdown('**Beer Market Analysis - Production and Marketing**')
+st.header('**Beer Market Analysis - Production and Marketing**')
 st.markdown(
     f'Currently Showing **{len(filtered):,}** reviews'
     + (f' for {selected_style}' if selected_style != 'All Styles' else ' accross **all styles**')
@@ -137,4 +137,34 @@ k4.metric('Unique Breweries', f'{filtered['brewery_name'].nunique():,}')
 
 st.divider()
 
+st.subheader('Ascpect Importance in selected Beer Style and Location')
+aspect_means = {
+    'Aroma': filtered['review_aroma'].mean(),
+    'Appearance': filtered['review_appearance'].mean(),
+    'Palate': filtered['review_palate'].mean(),
+    'Taste': filtered['review_taste'].mean(),
+}
 
+aspect_df = pd.DataFrame(
+    list(aspect_means.items()),
+    columns=['Aspect', 'Average Score']
+).sort_values('Average Score', ascending=False)
+
+fig1 = px.bar(
+    aspect_df,
+    y='Aspect',
+    x='Average Score',
+    orientation='h',
+    text_auto='.2f',
+    color='Average Score',
+    color_continuous_scale='Oranges',
+)
+
+fig1.update_traces(textposition='outside')
+fig1.update_layout(
+    xaxis_range=[0, 5.5],
+    coloraxis_showscale=False,
+    yaxis_title='Average Score',
+    xaxis_title='',
+)
+st.plotly_chart(fig1, width='content')
