@@ -223,3 +223,47 @@ with col2:
     )
     st.plotly_chart(fig2, width='content')
 
+col3, col4 = st.columns(2)
+
+with col3:
+    st.subheader('Top Competitors')
+
+    brewery_stats = (
+        filtered.groupby('brewery_name')
+        .agg(
+            avg_score=('review_overall', 'mean'),
+            review_count=('review_overall', 'count')
+        )
+        .query('review_count >= 5')
+
+        .sort_values('avg_score', ascending=False)
+        .head(10)
+        .reset_index()
+    )
+
+    if brewery_stats.empty:
+        st.info('No Breweries with more than 5 reveiws match current filters')
+    else:
+        fig3 = px.bar(
+            brewery_stats,
+            x='avg_score',
+            y='brewery_name',
+            orientation='h',
+            text_auto='.2f',
+            color='avg_score',
+            color_continuous_scale='Oranges',
+            labels={
+                'avg_score': "Average Overall Score",
+                'brewery_name': '',
+            },
+            hover_data={'review_count': True, 'avg_score': ':.2f'},
+        )
+
+        fig3.update_layout(
+            coloraxis_showscale=False,
+            xaxis_range=[0, 5.5],
+            yaxis_title='Average Overall Score',
+            xaxis_title='',
+        )
+
+        st.plotly_chart(fig3, width='content')
