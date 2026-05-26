@@ -137,34 +137,89 @@ k4.metric('Unique Breweries', f'{filtered['brewery_name'].nunique():,}')
 
 st.divider()
 
-st.subheader('Ascpect Importance in selected Beer Style and Location')
-aspect_means = {
+col1, col2 = st.columns(2)
+
+with col1:
+    st.subheader('Ascpect Importance in selected Beer Style and Location')
+    aspect_means = {
     'Aroma': filtered['review_aroma'].mean(),
     'Appearance': filtered['review_appearance'].mean(),
     'Palate': filtered['review_palate'].mean(),
     'Taste': filtered['review_taste'].mean(),
-}
+    }
 
-aspect_df = pd.DataFrame(
+    aspect_df = pd.DataFrame(
     list(aspect_means.items()),
     columns=['Aspect', 'Average Score']
-).sort_values('Average Score', ascending=False)
+    ).sort_values('Average Score', ascending=False)
 
-fig1 = px.bar(
-    aspect_df,
-    y='Aspect',
-    x='Average Score',
-    orientation='h',
-    text_auto='.2f',
-    color='Average Score',
-    color_continuous_scale='Oranges',
-)
+    fig1 = px.bar(
+        aspect_df,
+        y='Aspect',
+        x='Average Score',
+        orientation='h',
+        text_auto='.2f',
+        color='Average Score',
+        color_continuous_scale='Oranges',
+    )
 
-fig1.update_traces(textposition='outside')
-fig1.update_layout(
-    xaxis_range=[0, 5.5],
-    coloraxis_showscale=False,
-    yaxis_title='Average Score',
-    xaxis_title='',
-)
-st.plotly_chart(fig1, width='content')
+    fig1.update_traces(textposition='outside')
+    fig1.update_layout(
+        xaxis_range=[0, 5.5],
+        coloraxis_showscale=False,
+        yaxis_title='Average Score',
+        xaxis_title='',
+    )
+    st.plotly_chart(fig1, width='content')
+
+with col2:
+    st.subheader('Overall Position Radar')
+
+    radar_categories = ['Aroma', 'Appearance', 'Palate', 'Taste']
+
+    actual_vals = [
+        filtered['review_aroma'].mean(),
+        filtered['review_appearance'].mean(),
+        filtered['review_palate'].mean(),
+        filtered['review_taste'].mean(),
+    ]
+
+    user_vals = [min_aroma, min_appearance, min_palate, min_taste]
+
+    fig2 = go.Figure()
+    fig2.add_trace(go.Scatterpolar(
+        r=actual_vals + [actual_vals[0]],
+        theta=radar_categories + [radar_categories[0]],
+        fill='toself',
+        fillcolor='rgba(255, 160, 50, 0.2)',
+        line=dict(color='#f5a623', width=2),
+        name='Actual Average'
+    ))
+    
+    fig2.add_trace(go.Scatterpolar(
+        r=user_vals + [user_vals[0]],
+        theta=radar_categories + [radar_categories[0]],
+        fill='toself',
+        fillcolor='rgba(200, 100, 30, 0.08)',
+        line=dict(color="#905b29", width=2, dash='dash'),
+        name='Your Threshold'
+    ))
+
+    fig2.update_layout(
+        polar=dict(
+            radialaxis=dict(
+                visible=True,
+                range=[0, 5],
+            ),
+        ),
+        legend=dict(
+            orientation='h',
+            yanchor='bottom',
+            y=0.2,
+            xanchor='center',
+            x=0.5
+        ),
+        margin=dict(t=40, b=80, l=40, r=40),
+    )
+    st.plotly_chart(fig2, width='content')
+
