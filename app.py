@@ -3,12 +3,16 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 
+from trend_chart import render_trend_chart
+
 df = pd.read_csv("Data.csv")  # put your CSV in the same folder
 
 st.set_page_config(
     page_title="Beer Market Insights",
     layout='wide'
 )
+
+@st.cache_data
 
 def load_data():
     df = pd.read_csv('Data.csv')
@@ -134,6 +138,10 @@ k1.metric('Total Reviews', f'{len(filtered):,}')
 k2.metric('Average Overall Score', f'{filtered["review_overall"].mean():.2f}')
 k3.metric('Unique Beers', f'{filtered["beer_name"].nunique():,}')
 k4.metric('Unique Breweries', f'{filtered["brewery_name"].nunique():,}')
+
+st.divider()
+
+render_trend_chart(df, selected_style)
 
 st.divider()
 
