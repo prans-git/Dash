@@ -112,8 +112,8 @@ filtered = filtered[
     (filtered['review_appearance']  >= min_appearance) &
     (filtered['review_palate']  >= min_palate) &
     (filtered['review_taste']  >= min_taste) &
-    (filtered['beer_abv']  >= abv_min_val) &
-    (filtered['beer_abv']  <= abv_max_val)
+    (filtered['beer_abv']  >= abv_low) &
+    (filtered['beer_abv']  <= abv_high)
 ]
 
 if filtered.empty:
@@ -131,9 +131,9 @@ st.divider()
 
 k1, k2, k3, k4 = st.columns(4)
 k1.metric('Total Reviews', f'{len(filtered):,}')
-k2.metric('Average Overall Score', f'{filtered['review_overall'].mean():.2f}')
-k3.metric('Unique Beers', f'{filtered['beer_name'].nunique():.,}')
-k4.metric('Unique Breweries', f'{filtered['brewery_name'].nunique():,}')
+k2.metric('Average Overall Score', f'{filtered["review_overall"].mean():.2f}')
+k3.metric('Unique Beers', f'{filtered["beer_name"].nunique():,}')
+k4.metric('Unique Breweries', f'{filtered["brewery_name"].nunique():,}')
 
 st.divider()
 
@@ -226,44 +226,77 @@ with col2:
 col3, col4 = st.columns(2)
 
 with col3:
-    st.subheader('Top Competitors')
-
+    st.subheader("Top Competitors")
     brewery_stats = (
-        filtered.groupby('brewery_name')
-        .agg(
-            avg_score=('review_overall', 'mean'),
-            review_count=('review_overall', 'count')
-        )
-        .query('review_count >= 5')
-
-        .sort_values('avg_score', ascending=False)
+        filtered.groupby("brewery_name")
+        .agg(avg_score=("review_overall", "mean"), review_count=("review_overall", "count"))
+        .query("review_count >= 5")
+        .sort_values("avg_score", ascending=False)
         .head(10)
         .reset_index()
     )
-
     if brewery_stats.empty:
-        st.info('No Breweries with more than 5 reveiws match current filters')
+        st.info("No breweries match current filters.")
     else:
         fig3 = px.bar(
             brewery_stats,
-            x='avg_score',
-            y='brewery_name',
-            orientation='h',
-            text_auto='.2f',
-            color='avg_score',
-            color_continuous_scale='Oranges',
-            labels={
-                'avg_score': "Average Overall Score",
-                'brewery_name': '',
-            },
-            hover_data={'review_count': True, 'avg_score': ':.2f'},
+            x="avg_score",
+            y="brewery_name",
+            orientation="h",
+            text_auto=".2f",
+            color="avg_score",
+            color_continuous_scale="Oranges",
+            labels={"avg_score": "Average Overall Score", "brewery_name": ""},
         )
-
         fig3.update_layout(
             coloraxis_showscale=False,
             xaxis_range=[0, 5.5],
-            yaxis_title='Average Overall Score',
-            xaxis_title='',
+            xaxis_title="Average Overall Score",
+            yaxis_title="",
+            yaxis=dict(autorange="reversed"),
+        )
+        st.plotly_chart(fig3, width='content')
+
+with col4:
+    st.subheader("Top Beers By Review")
+    beer_stats = (
+        filtered.groupby("beer_name")
+        .agg(review_count=("review_overall", "count"), avg_score=("review_overall", "mean"))
+        .sort_values("review_count", ascending=False)
+        .head(10)
+        .reset_index()
+    )
+    if beer_stats.empty:
+        st.info("No beers match current filters.")
+    else:
+        beer_stats["avg_score"] = beer_stats["avg_score"].round(2)
+        fig4 = px.scatter(
+            beer_stats,
+            x="review_count",
+            y="beer_name",
+            size="review_count",
+            color="avg_score",
+            hover_name="beer_name",
+            text="beer_name",
+            color_continuous_scale="Oranges",
+            labels={
+                "review_count": "Number of Reviews",
+                "avg_score": "Avg Overall Score",
+            },
+            size_max=60,
         )
 
-        st.plotly_chart(fig3, width='content')
+        fig4.update_traces(
+            textposition="top center",  
+            textfont=dict(size=9),
+        )
+
+        fig4.update_layout(
+            coloraxis_showscale=False,
+            yaxis_range=[0, 5.5],
+            xaxis_title="Number of Reviews",
+            yaxis_title="Avg Score",
+            yaxis=dict(autorange="reversed"),
+        )
+
+        st.plotly_chart(fig4, width='content')
